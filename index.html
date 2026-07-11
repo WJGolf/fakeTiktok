@@ -170,10 +170,9 @@
   .err{color:var(--danger);font-size:12.5px;margin-top:8px;min-height:16px;}
   .ok{color:#4ade80;font-size:12.5px;margin-top:8px;min-height:16px;}
   .hint{color:var(--muted);font-size:11.5px;line-height:1.5;margin-top:2px;}
-  .tabs{display:flex;gap:6px;margin-bottom:16px;background:var(--surface-2);border-radius:12px;padding:4px;}
-  .tabs button{flex:1;border:none;background:transparent;color:var(--muted);font-weight:700;font-size:13.5px;
-    padding:9px;border-radius:9px;cursor:pointer;}
-  .tabs button.active{background:var(--grad);color:#fff;}
+  /* switch-link under each auth sheet, e.g. "ยังไม่มีบัญชี? สมัครสมาชิก" */
+  .switch-link{margin-top:14px;text-align:center;font-size:13px;color:var(--muted);}
+  .switch-link a{color:#fff;font-weight:700;text-decoration:none;cursor:pointer;}
 
   /* ---------- profile screen ---------- */
   #profileScreen{
@@ -238,39 +237,37 @@
 
 <div id="feed"></div>
 
-<!-- ---------- auth sheet ---------- -->
-<div class="overlay" id="authOverlay">
+<!-- ---------- login sheet (separate page, not merged with signup) ---------- -->
+<div class="overlay" id="loginOverlay">
   <div class="sheet">
-    <div class="tabs">
-      <button id="tabLogin" class="active">เข้าสู่ระบบ</button>
-      <button id="tabSignup">สมัครสมาชิก</button>
+    <h3>ยินดีต้อนรับกลับ</h3>
+    <p class="sub">เข้าสู่ระบบเพื่ออัปโหลดและจัดการโปรไฟล์ของคุณ</p>
+    <div class="field"><label>อีเมล</label><input type="email" id="liEmail" placeholder="you@example.com"></div>
+    <div class="field"><label>รหัสผ่าน</label><input type="password" id="liPass" placeholder="••••••••"></div>
+    <div class="err" id="liErr"></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="loginCancel">ยกเลิก</button>
+      <button class="btn primary" id="liSubmit">เข้าสู่ระบบ</button>
     </div>
+    <div class="switch-link">ยังไม่มีบัญชี? <a id="goSignup">สมัครสมาชิก</a></div>
+  </div>
+</div>
 
-    <div id="loginPane">
-      <h3>ยินดีต้อนรับกลับ</h3>
-      <p class="sub">เข้าสู่ระบบเพื่ออัปโหลดและจัดการโปรไฟล์ของคุณ</p>
-      <div class="field"><label>อีเมล</label><input type="email" id="liEmail" placeholder="you@example.com"></div>
-      <div class="field"><label>รหัสผ่าน</label><input type="password" id="liPass" placeholder="••••••••"></div>
-      <div class="err" id="liErr"></div>
-      <div class="sheet-actions">
-        <button class="btn ghost" id="authCancel1">ยกเลิก</button>
-        <button class="btn primary" id="liSubmit">เข้าสู่ระบบ</button>
-      </div>
+<!-- ---------- signup sheet (separate page, not merged with login) ---------- -->
+<div class="overlay" id="signupOverlay">
+  <div class="sheet">
+    <h3>สร้างบัญชีใหม่</h3>
+    <p class="sub">ใช้ชื่อผู้ใช้ที่จะแสดงบนคลิปของคุณ</p>
+    <div class="field"><label>ชื่อผู้ใช้</label><input type="text" id="suUsername" placeholder="เช่น วิษณุ"></div>
+    <div class="field"><label>อีเมล</label><input type="email" id="suEmail" placeholder="you@example.com"></div>
+    <div class="field"><label>รหัสผ่าน</label><input type="password" id="suPass" placeholder="อย่างน้อย 6 ตัวอักษร"></div>
+    <div class="err" id="suErr"></div>
+    <div class="ok" id="suOk"></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="signupCancel">ยกเลิก</button>
+      <button class="btn primary" id="suSubmit">สมัครสมาชิก</button>
     </div>
-
-    <div id="signupPane" style="display:none;">
-      <h3>สร้างบัญชีใหม่</h3>
-      <p class="sub">ใช้ชื่อผู้ใช้ที่จะแสดงบนคลิปของคุณ</p>
-      <div class="field"><label>ชื่อผู้ใช้</label><input type="text" id="suUsername" placeholder="เช่น วิษณุ"></div>
-      <div class="field"><label>อีเมล</label><input type="email" id="suEmail" placeholder="you@example.com"></div>
-      <div class="field"><label>รหัสผ่าน</label><input type="password" id="suPass" placeholder="อย่างน้อย 6 ตัวอักษร"></div>
-      <div class="err" id="suErr"></div>
-      <div class="ok" id="suOk"></div>
-      <div class="sheet-actions">
-        <button class="btn ghost" id="authCancel2">ยกเลิก</button>
-        <button class="btn primary" id="suSubmit">สมัครสมาชิก</button>
-      </div>
-    </div>
+    <div class="switch-link">มีบัญชีแล้ว? <a id="goLogin">เข้าสู่ระบบ</a></div>
   </div>
 </div>
 
@@ -341,6 +338,15 @@
 
   // ---------------- config ----------------
   // แก้ 2 บรรทัดนี้เป็นค่าจากโปรเจกต์ Supabase ของคุณ (Settings → API)
+  // หมายเหตุสำคัญเรื่องบัญชีผู้ใช้หลายคน:
+  // - session ของผู้ใช้ที่ล็อกอินอยู่ถูกเก็บไว้ใน localStorage ของ "เบราว์เซอร์" (คีย์ SESSION_KEY ด้านล่าง)
+  //   ถ้าเปิดเว็บนี้คนละเครื่อง/คนละเบราว์เซอร์ แต่ละคนจะมี session ของตัวเองแยกกันอยู่แล้ว ไม่ชนกัน
+  // - แต่ถ้าใช้เครื่อง/เบราว์เซอร์เดียวกัน (เช่น ทดสอบหลายบัญชีบนคอมเครื่องเดียว) การล็อกอินบัญชีใหม่
+  //   จะ "ทับ" session เดิมเสมอ (ดูฟังก์ชัน saveSession) ต้องกด "ออกจากระบบ" ก่อนถึงจะสลับบัญชีได้
+  // - อีกสาเหตุที่พบบ่อยที่ทำให้ "ล็อกอินได้แต่เหมือนเข้าไม่ได้": ระบบ auth สร้างบัญชีสำเร็จ
+  //   แต่ตาราง profiles ไม่มีแถวคู่กัน (ปกติต้องมี DB trigger สร้างให้อัตโนมัติ) ทำให้ myProfile
+  //   เป็น null และแอปแสดงเหมือนยังไม่ได้ล็อกอิน โค้ดด้านล่างแก้ปัญหานี้ด้วยฟังก์ชัน ensureMyProfile()
+  //   ที่จะสร้างแถวโปรไฟล์ให้อัตโนมัติถ้ายังไม่มี ไม่ต้องพึ่ง trigger ฝั่ง DB อีกต่อไป
   var config = {
     url: "https://oxrgojxtgndejfobksck.supabase.co/",
     key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94cmdvanh0Z25kZWpmb2Jrc2NrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3MjgwNjgsImV4cCI6MjA5OTMwNDA2OH0.DDCgLRRjbDh6SZslvGeXzJCqKqcWlGgnH107s_gV4LA",
@@ -412,6 +418,32 @@
       body: JSON.stringify({ email: email, password: pass })
     }).then(function(r){ return r.json().then(function(d){ if (!r.ok) throw new Error(d.msg || d.error_description || "อีเมลหรือรหัสผ่านไม่ถูกต้อง"); return d; }); });
   }
+
+  // ---- ensure a "profiles" row exists for the logged-in user ----
+  // เดิมแอปคาดหวังว่าจะมี DB trigger คอยสร้างแถวใน profiles ให้อัตโนมัติตอนสมัครสมาชิก
+  // แต่ถ้าไม่มี trigger นั้น (หรือมันพัง) ผู้ใช้คนถัดไปจะสมัคร/ล็อกอินได้ที่ระบบ auth
+  // แต่แอปจะหาโปรไฟล์ไม่เจอ (fetchProfileById คืนค่าว่าง) ทำให้ myProfile เป็น null
+  // แล้ว renderAuthUI() ก็จะแสดงเหมือนยัง "ไม่ได้ล็อกอิน" อยู่ดี — นี่คือสาเหตุที่คนอื่น
+  // "ล็อกอินต่อไม่ได้" หลังจากมีคนแรกใช้งานไปแล้ว
+  // ฟังก์ชันนี้แก้ปัญหานั้น: ถ้าล็อกอิน/สมัครสำเร็จแล้วแต่ยังไม่มีแถวโปรไฟล์ ให้สร้างให้เลย
+  function ensureMyProfile(user, fallbackUsername){
+    return fetchProfileById(user.id).then(function(p){
+      if (p) return p; // มีโปรไฟล์อยู่แล้ว ใช้ของเดิม
+      var username = fallbackUsername || (user.user_metadata && user.user_metadata.username) || (user.email ? user.email.split('@')[0] : 'ผู้ใช้');
+      return authFetch("/rest/v1/profiles", {
+        method: "POST",
+        jsonBody: { id: user.id, username: username, bio: '', avatar_url: null },
+        headers: { "Prefer": "return=representation,resolution=merge-duplicates" }
+      }).then(function(r){
+        return r.json().then(function(d){
+          if (!r.ok) throw new Error((d && d.message) || "สร้างโปรไฟล์ไม่สำเร็จ");
+          var created = Array.isArray(d) ? d[0] : d;
+          profileCache[user.id] = created;
+          return created;
+        });
+      });
+    });
+  }
   function refreshSession(){
     if (!session || !session.refresh_token) return Promise.reject(new Error("no session"));
     return fetch(config.url + "/auth/v1/token?grant_type=refresh_token", {
@@ -441,16 +473,23 @@
     }).then(function(r){ return r.json().then(function(d){ if (!r.ok) throw new Error((d && d.message) || "บันทึกไม่สำเร็จ"); return d[0]; }); });
   }
 
+  // เรียกตอนเปิดหน้าเว็บ: โหลด session เก่าจาก localStorage (ถ้ามี) แล้วดึง/สร้างโปรไฟล์คู่กัน
   function initSession(){
     loadSession();
     if (!session) { renderAuthUI(); return Promise.resolve(); }
-    return fetchProfileById(session.user.id).then(function(p){
+    return ensureMyProfile(session.user).then(function(p){
       myProfile = p;
       profileCache[session.user.id] = p;
       renderAuthUI();
-    }).catch(function(){ renderAuthUI(); });
+    }).catch(function(){
+      // token เก่าอาจหมดอายุ/ใช้ไม่ได้แล้ว → เคลียร์ session ทิ้งแล้วกลับไปสถานะยังไม่ล็อกอิน
+      saveSession(null);
+      myProfile = null;
+      renderAuthUI();
+    });
   }
 
+  // อัปเดตปุ่มบน topbar ให้ตรงกับสถานะล็อกอิน: โชว์ปุ่ม "เข้าสู่ระบบ" หรือ avatar ของผู้ใช้
   function renderAuthUI(){
     var loginBtn = document.getElementById('loginBtn');
     var avatarBtn = document.getElementById('myAvatarBtn');
@@ -716,29 +755,40 @@
   }
 
   // ---------------- auth sheet wiring ----------------
-  var authOverlay = document.getElementById('authOverlay');
-  function openAuth(tab){
+  // login และ signup เป็นคนละหน้า/คนละ overlay กัน ไม่รวมเป็น tab เดียวเหมือนเดิม
+  // แต่ละหน้ามีลิงก์เล็กๆ ด้านล่างไว้สลับไปอีกหน้าได้เผื่อผู้ใช้กดผิด
+  var loginOverlay = document.getElementById('loginOverlay');
+  var signupOverlay = document.getElementById('signupOverlay');
+
+  function openLogin(){
+    document.getElementById('liEmail').value = '';
+    document.getElementById('liPass').value = '';
     document.getElementById('liErr').textContent = '';
+    signupOverlay.classList.remove('show');
+    loginOverlay.classList.add('show');
+  }
+  function closeLogin(){ loginOverlay.classList.remove('show'); }
+
+  function openSignup(){
+    document.getElementById('suUsername').value = '';
+    document.getElementById('suEmail').value = '';
+    document.getElementById('suPass').value = '';
     document.getElementById('suErr').textContent = '';
     document.getElementById('suOk').textContent = '';
-    switchAuthTab(tab || 'login');
-    authOverlay.classList.add('show');
+    loginOverlay.classList.remove('show');
+    signupOverlay.classList.add('show');
   }
-  function closeAuth(){ authOverlay.classList.remove('show'); }
-  function switchAuthTab(tab){
-    var isLogin = tab === 'login';
-    document.getElementById('tabLogin').classList.toggle('active', isLogin);
-    document.getElementById('tabSignup').classList.toggle('active', !isLogin);
-    document.getElementById('loginPane').style.display = isLogin ? '' : 'none';
-    document.getElementById('signupPane').style.display = isLogin ? 'none' : '';
-  }
-  document.getElementById('loginBtn').onclick = function(){ openAuth('login'); };
-  document.getElementById('tabLogin').onclick = function(){ switchAuthTab('login'); };
-  document.getElementById('tabSignup').onclick = function(){ switchAuthTab('signup'); };
-  document.getElementById('authCancel1').onclick = closeAuth;
-  document.getElementById('authCancel2').onclick = closeAuth;
-  authOverlay.onclick = function(e){ if (e.target === authOverlay) closeAuth(); };
+  function closeSignup(){ signupOverlay.classList.remove('show'); }
 
+  document.getElementById('loginBtn').onclick = openLogin;
+  document.getElementById('loginCancel').onclick = closeLogin;
+  document.getElementById('signupCancel').onclick = closeSignup;
+  document.getElementById('goSignup').onclick = openSignup;
+  document.getElementById('goLogin').onclick = openLogin;
+  loginOverlay.onclick = function(e){ if (e.target === loginOverlay) closeLogin(); };
+  signupOverlay.onclick = function(e){ if (e.target === signupOverlay) closeSignup(); };
+
+  // ---- เข้าสู่ระบบ ----
   document.getElementById('liSubmit').onclick = function(){
     var email = document.getElementById('liEmail').value.trim();
     var pass = document.getElementById('liPass').value;
@@ -749,11 +799,14 @@
     btn.disabled = true; btn.textContent = 'กำลังเข้าสู่ระบบ...';
     signIn(email, pass).then(function(d){
       saveSession({ access_token: d.access_token, refresh_token: d.refresh_token, user: d.user });
-      return fetchProfileById(d.user.id);
+      // ใช้ ensureMyProfile แทน fetchProfileById ตรงๆ เพื่อสร้างแถวโปรไฟล์ให้อัตโนมัติ
+      // ถ้าบัญชีนี้ยังไม่เคยมีโปรไฟล์ (สาเหตุหลักที่คนถัดไปล็อกอินแล้วดูเหมือนเข้าไม่ได้)
+      return ensureMyProfile(d.user);
     }).then(function(p){
       myProfile = p;
+      profileCache[myProfile.id] = myProfile;
       renderAuthUI();
-      closeAuth();
+      closeLogin();
     }).catch(function(e){
       errEl.textContent = e.message;
     }).finally(function(){
@@ -761,6 +814,7 @@
     });
   };
 
+  // ---- สมัครสมาชิก ----
   document.getElementById('suSubmit').onclick = function(){
     var username = document.getElementById('suUsername').value.trim();
     var email = document.getElementById('suEmail').value.trim();
@@ -774,15 +828,18 @@
     btn.disabled = true; btn.textContent = 'กำลังสมัคร...';
     signUp(email, pass, username).then(function(d){
       if (d.access_token) {
+        // โปรเจกต์นี้ปิดการยืนยันอีเมล ได้ session ทันที → สร้างโปรไฟล์แล้วพาเข้าเลย
         saveSession({ access_token: d.access_token, refresh_token: d.refresh_token, user: d.user });
-        return fetchProfileById(d.user.id).then(function(p){
+        return ensureMyProfile(d.user, username).then(function(p){
           myProfile = p;
+          profileCache[myProfile.id] = myProfile;
           renderAuthUI();
-          closeAuth();
+          closeSignup();
         });
       } else {
+        // ต้องยืนยันอีเมลก่อน ยังไม่มี session ให้ผู้ใช้ไปเข้าสู่ระบบเองหลังยืนยัน
         okEl.textContent = 'สมัครสำเร็จ! ตรวจสอบอีเมลเพื่อยืนยันบัญชี แล้วเข้าสู่ระบบ';
-        switchAuthTab('login');
+        setTimeout(openLogin, 1200);
       }
     }).catch(function(e){
       errEl.textContent = e.message;
@@ -799,7 +856,7 @@
       alert('ยังไม่ได้ใส่ Supabase URL/anon key ในโค้ด กรุณาแก้ในไฟล์ index.html ส่วน config ก่อน');
       return;
     }
-    if (!session || !myProfile) { openAuth('login'); return; }
+    if (!session || !myProfile) { openLogin(); return; }
     document.getElementById('upTitle').value = '';
     document.getElementById('upFile').value = '';
     document.getElementById('upErr').textContent = '';
