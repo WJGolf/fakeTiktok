@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>วนคลิป</title>
+<style>
+  :root{
+    --bg:#0b0b10;
+    --surface:#17161d;
+    --surface-2:#201f29;
+    --text:#f5f4f7;
+    --muted:#9c99a8;
+    --accent-a:#ff2d78;
+    --accent-b:#7c3aed;
+    --grad:linear-gradient(135deg,var(--accent-a),var(--accent-b));
+    --danger:#ff4d4d;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans Thai","Noto Sans",system-ui,sans-serif;
+    overflow:hidden;}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:fixed;top:0;left:0;right:0;z-index:30;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 14px;
+    background:linear-gradient(to bottom, rgba(0,0,0,.55), transparent);
+    pointer-events:none;
+  }
+  .topbar > *{pointer-events:auto;}
+  .logo{display:flex;align-items:baseline;gap:6px;font-weight:800;font-size:19px;letter-spacing:.2px;cursor:pointer;}
+  .logo .loop{
+    background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .logo small{font-size:11px;color:var(--muted);font-weight:500;}
+  .icon-btn{
+    width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.14);
+    background:rgba(20,20,26,.55);backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);
+  }
+  .icon-btn svg{width:19px;height:19px;}
+  .top-actions{display:flex;gap:8px;align-items:center;}
+  .upload-fab{
+    display:flex;align-items:center;gap:6px;border:none;border-radius:20px;padding:9px 16px 9px 12px;
+    background:var(--grad);color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;
+    box-shadow:0 6px 18px rgba(255,45,120,.35);
+  }
+  .upload-fab svg{width:16px;height:16px;}
+  .login-fab{
+    border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:9px 16px;background:rgba(20,20,26,.55);
+    backdrop-filter:blur(6px);color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;
+  }
+  .avatar-btn{
+    width:38px;height:38px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,.25);
+    cursor:pointer;background:var(--grad);display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:15px;color:#fff;flex-shrink:0;
+  }
+  .avatar-btn img{width:100%;height:100%;object-fit:cover;display:block;}
+
+  /* ---------- feed ---------- */
+  #feed{
+    height:100%;height:100dvh;overflow-y:scroll;scroll-snap-type:y mandatory;
+    scrollbar-width:none;
+  }
+  #feed::-webkit-scrollbar{display:none;}
+  .card{
+    position:relative;height:100%;height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;
+    display:flex;align-items:flex-end;justify-content:center;background:#000;overflow:hidden;
+  }
+  .card video, .card img{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;
+  }
+  .card .scrim{
+    position:absolute;left:0;right:0;bottom:0;height:44%;
+    background:linear-gradient(to top, rgba(0,0,0,.75), transparent);
+    pointer-events:none;
+  }
+  .meta{
+    position:relative;z-index:2;width:100%;padding:0 84px 30px 18px;
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 26px);
+  }
+  .meta h2{margin:0 0 6px;font-size:17px;font-weight:800;line-height:1.3;}
+  .meta .author-row{display:flex;align-items:center;gap:8px;cursor:pointer;width:fit-content;}
+  .meta .author-row .mini-avatar{
+    width:24px;height:24px;border-radius:50%;overflow:hidden;background:var(--grad);
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;
+  }
+  .meta .author-row .mini-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+  .meta p{margin:0;font-size:13.5px;color:var(--muted);font-weight:600;}
+  .meta p .dot{color:var(--muted);opacity:.5;margin:0 6px;}
+
+  .side-actions{
+    position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 34px);z-index:3;
+    display:flex;flex-direction:column;align-items:center;gap:22px;
+  }
+  .like-btn{
+    background:none;border:none;padding:0;cursor:pointer;color:#fff;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+  }
+  .like-btn svg{width:32px;height:32px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));transition:transform .18s ease;}
+  .like-btn.liked svg{fill:var(--accent-a);stroke:var(--accent-a);}
+  .like-btn.pop svg{transform:scale(1.35);}
+  .like-count{font-size:12px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);}
+
+  .mute-btn{
+    position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 64px);z-index:3;
+  }
+
+  .progress{
+    position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.15);z-index:4;
+  }
+  .progress i{display:block;height:100%;width:0%;background:var(--grad);}
+
+  /* ---------- empty state ---------- */
+  .empty{
+    height:100%;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;text-align:center;padding:0 30px;
+  }
+  .empty .ring{
+    width:64px;height:64px;border-radius:50%;background:var(--grad);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .empty .ring svg{width:28px;height:28px;color:#fff;}
+  .empty h3{margin:0;font-size:17px;}
+  .empty p{margin:0;color:var(--muted);font-size:13.5px;max-width:260px;}
+  .empty button{
+    margin-top:6px;border:none;border-radius:22px;padding:11px 22px;background:var(--grad);
+    color:#fff;font-weight:700;font-size:14px;cursor:pointer;
+  }
+
+  /* ---------- modal / bottom sheet ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(6,6,9,.72);backdrop-filter:blur(3px);
+    display:flex;align-items:flex-end;justify-content:center;z-index:50;
+    opacity:0;pointer-events:none;transition:opacity .18s ease;
+  }
+  .overlay.show{opacity:1;pointer-events:auto;}
+  .sheet{
+    width:100%;max-width:460px;background:var(--surface);border-radius:20px 20px 0 0;
+    padding:20px 20px calc(env(safe-area-inset-bottom,0px) + 22px);
+    transform:translateY(16px);transition:transform .2s ease;
+    max-height:88vh;overflow-y:auto;
+  }
+  .overlay.show .sheet{transform:translateY(0);}
+  .sheet h3{margin:0 0 4px;font-size:17px;}
+  .sheet .sub{margin:0 0 18px;color:var(--muted);font-size:12.5px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600;}
+  .field input[type=text], .field input[type=url], .field input[type=password], .field input[type=email], .field textarea{
+    width:100%;padding:12px 13px;border-radius:12px;border:1px solid rgba(255,255,255,.12);
+    background:var(--surface-2);color:var(--text);font-size:14px;outline:none;font-family:inherit;
+  }
+  .field textarea{resize:vertical;min-height:64px;}
+  .field input:focus, .field textarea:focus{border-color:var(--accent-b);}
+  .field .readonly-note{font-size:12px;color:var(--muted);padding:12px 13px;background:var(--surface-2);border-radius:12px;}
+  .filedrop{
+    border:1.5px dashed rgba(255,255,255,.2);border-radius:14px;padding:20px;text-align:center;
+    color:var(--muted);font-size:13px;cursor:pointer;position:relative;
+  }
+  .filedrop.has-file{border-color:var(--accent-b);color:var(--text);}
+  .filedrop input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+  .sheet-actions{display:flex;gap:10px;margin-top:6px;}
+  .btn{flex:1;border:none;border-radius:13px;padding:13px;font-weight:700;font-size:14.5px;cursor:pointer;}
+  .btn.primary{background:var(--grad);color:#fff;}
+  .btn.ghost{background:var(--surface-2);color:var(--text);}
+  .btn.danger{background:rgba(255,77,77,.15);color:var(--danger);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .err{color:var(--danger);font-size:12.5px;margin-top:8px;min-height:16px;}
+  .ok{color:#4ade80;font-size:12.5px;margin-top:8px;min-height:16px;}
+  .hint{color:var(--muted);font-size:11.5px;line-height:1.5;margin-top:2px;}
+  .tabs{display:flex;gap:6px;margin-bottom:16px;background:var(--surface-2);border-radius:12px;padding:4px;}
+  .tabs button{flex:1;border:none;background:transparent;color:var(--muted);font-weight:700;font-size:13.5px;
+    padding:9px;border-radius:9px;cursor:pointer;}
+  .tabs button.active{background:var(--grad);color:#fff;}
+
+  /* ---------- profile screen ---------- */
+  #profileScreen{
+    position:fixed;inset:0;z-index:40;background:var(--bg);
+    transform:translateX(100%);transition:transform .22s ease;overflow-y:auto;
+  }
+  #profileScreen.show{transform:translateX(0);}
+  .profile-topbar{
+    display:flex;align-items:center;gap:10px;
+    padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 10px;
+    position:sticky;top:0;background:var(--bg);z-index:2;
+  }
+  .profile-topbar .ptitle{font-weight:800;font-size:16px;flex:1;}
+  .profile-header{padding:10px 20px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;}
+  .big-avatar{
+    width:88px;height:88px;border-radius:50%;overflow:hidden;background:var(--grad);
+    display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:#fff;
+    border:3px solid rgba(255,255,255,.1);
+  }
+  .big-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+  .profile-header h2{margin:0;font-size:18px;}
+  .profile-header .bio{color:var(--muted);font-size:13.5px;max-width:320px;line-height:1.5;margin:0;}
+  .profile-actions{display:flex;gap:10px;margin-top:6px;}
+  .profile-actions .btn{padding:9px 20px;flex:none;font-size:13.5px;}
+  .profile-stats{display:flex;gap:22px;margin-top:4px;}
+  .profile-stats div{text-align:center;}
+  .profile-stats b{display:block;font-size:15px;}
+  .profile-stats span{font-size:11.5px;color:var(--muted);}
+  .grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:2px;
+  }
+  .grid-item{
+    position:relative;aspect-ratio:9/14;background:#000;overflow:hidden;cursor:pointer;
+  }
+  .grid-item video, .grid-item img{width:100%;height:100%;object-fit:cover;display:block;}
+  .grid-item .g-likes{
+    position:absolute;left:6px;bottom:6px;display:flex;align-items:center;gap:3px;
+    font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6);
+  }
+  .grid-item .g-likes svg{width:11px;height:11px;fill:#fff;}
+  .grid-item .del-btn{
+    position:absolute;right:6px;top:6px;width:26px;height:26px;border-radius:50%;
+    background:rgba(0,0,0,.55);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  }
+  .grid-item .del-btn svg{width:13px;height:13px;color:#fff;}
+  .profile-empty{padding:60px 20px;text-align:center;color:var(--muted);font-size:13.5px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo" id="logoHome">วน<span class="loop">คลิป</span><small>อัปแล้วขึ้นวน</small></div>
+  <div class="top-actions">
+    <button class="upload-fab" id="uploadBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      อัปโหลด
+    </button>
+    <button class="login-fab" id="loginBtn">เข้าสู่ระบบ</button>
+    <button class="avatar-btn" id="myAvatarBtn" style="display:none;"></button>
+  </div>
+</div>
+
+<div id="feed"></div>
+
+<!-- ---------- auth sheet ---------- -->
+<div class="overlay" id="authOverlay">
+  <div class="sheet">
+    <div class="tabs">
+      <button id="tabLogin" class="active">เข้าสู่ระบบ</button>
+      <button id="tabSignup">สมัครสมาชิก</button>
+    </div>
+
+    <div id="loginPane">
+      <h3>ยินดีต้อนรับกลับ</h3>
+      <p class="sub">เข้าสู่ระบบเพื่ออัปโหลดและจัดการโปรไฟล์ของคุณ</p>
+      <div class="field"><label>อีเมล</label><input type="email" id="liEmail" placeholder="you@example.com"></div>
+      <div class="field"><label>รหัสผ่าน</label><input type="password" id="liPass" placeholder="••••••••"></div>
+      <div class="err" id="liErr"></div>
+      <div class="sheet-actions">
+        <button class="btn ghost" id="authCancel1">ยกเลิก</button>
+        <button class="btn primary" id="liSubmit">เข้าสู่ระบบ</button>
+      </div>
+    </div>
+
+    <div id="signupPane" style="display:none;">
+      <h3>สร้างบัญชีใหม่</h3>
+      <p class="sub">ใช้ชื่อผู้ใช้ที่จะแสดงบนคลิปของคุณ</p>
+      <div class="field"><label>ชื่อผู้ใช้</label><input type="text" id="suUsername" placeholder="เช่น วิษณุ"></div>
+      <div class="field"><label>อีเมล</label><input type="email" id="suEmail" placeholder="you@example.com"></div>
+      <div class="field"><label>รหัสผ่าน</label><input type="password" id="suPass" placeholder="อย่างน้อย 6 ตัวอักษร"></div>
+      <div class="err" id="suErr"></div>
+      <div class="ok" id="suOk"></div>
+      <div class="sheet-actions">
+        <button class="btn ghost" id="authCancel2">ยกเลิก</button>
+        <button class="btn primary" id="suSubmit">สมัครสมาชิก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- upload sheet ---------- -->
+<div class="overlay" id="uploadOverlay">
+  <div class="sheet">
+    <h3>อัปโหลดคลิปหรือรูปใหม่</h3>
+    <p class="sub">ไฟล์จะถูกอัปขึ้น Supabase Storage และแสดงบนสุดของฟีดทันที</p>
+    <div class="field">
+      <label>ชื่อคลิป/รูป</label>
+      <input type="text" id="upTitle" placeholder="เช่น แมวเต้นเพลง">
+    </div>
+    <div class="field">
+      <label>ผู้ลง</label>
+      <div class="readonly-note" id="upAuthorNote">-</div>
+    </div>
+    <div class="field">
+      <label>ไฟล์วิดีโอหรือรูปภาพ</label>
+      <div class="filedrop" id="dropZone">
+        <span id="dropLabel">แตะเพื่อเลือกไฟล์ (วิดีโอ mp4/webm หรือรูป jpg/png/gif ฯลฯ)</span>
+        <input type="file" id="upFile" accept="video/*,image/*">
+      </div>
+    </div>
+    <div class="err" id="upErr"></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="upCancel">ยกเลิก</button>
+      <button class="btn primary" id="upSubmit">อัปโหลด</button>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- edit profile sheet ---------- -->
+<div class="overlay" id="editOverlay">
+  <div class="sheet">
+    <h3>แก้ไขโปรไฟล์</h3>
+    <p class="sub">การเปลี่ยนแปลงจะแสดงผลทันทีบนโปรไฟล์และคลิปที่คุณลง</p>
+    <div class="field">
+      <label>รูปโปรไฟล์</label>
+      <div class="filedrop" id="avatarDropZone">
+        <span id="avatarDropLabel">แตะเพื่อเลือกรูปโปรไฟล์ใหม่ (ไม่บังคับ)</span>
+        <input type="file" id="avatarFile" accept="image/*">
+      </div>
+    </div>
+    <div class="field"><label>ชื่อผู้ใช้</label><input type="text" id="edUsername"></div>
+    <div class="field"><label>แนะนำตัว</label><textarea id="edBio" placeholder="เกี่ยวกับคุณ..."></textarea></div>
+    <div class="err" id="edErr"></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="edCancel">ยกเลิก</button>
+      <button class="btn primary" id="edSubmit">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- profile screen ---------- -->
+<div id="profileScreen">
+  <div class="profile-topbar">
+    <button class="icon-btn" id="profileBack">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="ptitle" id="profileTitle">โปรไฟล์</div>
+  </div>
+  <div id="profileBody"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------------- config ----------------
+  // แก้ 2 บรรทัดนี้เป็นค่าจากโปรเจกต์ Supabase ของคุณ (Settings → API)
+  var config = {
+    url: "https://oxrgojxtgndejfobksck.supabase.co/",
+    key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94cmdvanh0Z25kZWpmb2Jrc2NrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3MjgwNjgsImV4cCI6MjA5OTMwNDA2OH0.DDCgLRRjbDh6SZslvGeXzJCqKqcWlGgnH107s_gV4LA",
+    maxFileSizeMB: 50
+  };
+
+  var IMAGE_DURATION_MS = 5000;
+  var SESSION_KEY = "vonclip_session";
+
+  var feedEl = document.getElementById('feed');
+  var videos = [];
+  var likedIds = new Set();
+  var observer = null;
+
+  // ---------------- auth state ----------------
+  var session = null;   // { access_token, refresh_token, user }
+  var myProfile = null; // { id, username, avatar_url, bio }
+  var profileCache = {}; // id -> profile
+
+  function loadSession(){
+    try {
+      var raw = localStorage.getItem(SESSION_KEY);
+      if (raw) session = JSON.parse(raw);
+    } catch(e){ session = null; }
+  }
+  function saveSession(s){
+    session = s;
+    if (s) localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+    else localStorage.removeItem(SESSION_KEY);
+  }
+
+  // ---------------- supabase REST helpers (no SDK needed) ----------------
+  function headers(extra){
+    var h = { apikey: config.key, Authorization: "Bearer " + (session ? session.access_token : config.key) };
+    if (extra) for (var k in extra) h[k] = extra[k];
+    return h;
+  }
+
+  function isConfigured(){
+    return !!(config.url && config.key &&
+      config.url.indexOf("YOUR-PROJECT-REF") === -1 &&
+      config.key.indexOf("YOUR-ANON-PUBLIC-KEY") === -1);
+  }
+
+  function authFetch(path, opts, retried){
+    opts = opts || {};
+    opts.headers = Object.assign(headers(opts.jsonBody !== undefined ? { "Content-Type": "application/json" } : {}), opts.headers || {});
+    if (opts.jsonBody !== undefined) opts.body = JSON.stringify(opts.jsonBody);
+    return fetch(config.url + path, opts).then(function(r){
+      if (r.status === 401 && session && session.refresh_token && !retried) {
+        return refreshSession().then(function(){ return authFetch(path, opts, true); });
+      }
+      return r;
+    });
+  }
+
+  // ---- auth actions ----
+  function signUp(email, pass, username){
+    return fetch(config.url + "/auth/v1/signup", {
+      method: "POST",
+      headers: { apikey: config.key, "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email, password: pass, data: { username: username } })
+    }).then(function(r){ return r.json().then(function(d){ if (!r.ok) throw new Error(d.msg || d.error_description || "สมัครสมาชิกไม่สำเร็จ"); return d; }); });
+  }
+  function signIn(email, pass){
+    return fetch(config.url + "/auth/v1/token?grant_type=password", {
+      method: "POST",
+      headers: { apikey: config.key, "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email, password: pass })
+    }).then(function(r){ return r.json().then(function(d){ if (!r.ok) throw new Error(d.msg || d.error_description || "อีเมลหรือรหัสผ่านไม่ถูกต้อง"); return d; }); });
+  }
+  function refreshSession(){
+    if (!session || !session.refresh_token) return Promise.reject(new Error("no session"));
+    return fetch(config.url + "/auth/v1/token?grant_type=refresh_token", {
+      method: "POST",
+      headers: { apikey: config.key, "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: session.refresh_token })
+    }).then(function(r){ return r.json(); }).then(function(d){
+      if (d.access_token) { saveSession({ access_token: d.access_token, refresh_token: d.refresh_token, user: d.user || (session && session.user) }); }
+      else { saveSession(null); }
+    }).catch(function(){ saveSession(null); });
+  }
+  function signOut(){
+    var p = session ? fetch(config.url + "/auth/v1/logout", { method: "POST", headers: headers() }).catch(function(){}) : Promise.resolve();
+    return p.then(function(){ saveSession(null); myProfile = null; renderAuthUI(); goHome(); });
+  }
+
+  // ---- profile helpers ----
+  function fetchProfileById(id){
+    if (profileCache[id]) return Promise.resolve(profileCache[id]);
+    return authFetch("/rest/v1/profiles?select=*&id=eq." + id, { method: "GET" })
+      .then(function(r){ return r.json(); })
+      .then(function(rows){ var p = rows && rows[0]; if (p) profileCache[id] = p; return p; });
+  }
+  function upsertMyProfile(fields){
+    return authFetch("/rest/v1/profiles?id=eq." + session.user.id, {
+      method: "PATCH", jsonBody: fields, headers: { "Prefer": "return=representation" }
+    }).then(function(r){ return r.json().then(function(d){ if (!r.ok) throw new Error((d && d.message) || "บันทึกไม่สำเร็จ"); return d[0]; }); });
+  }
+
+  function initSession(){
+    loadSession();
+    if (!session) { renderAuthUI(); return Promise.resolve(); }
+    return fetchProfileById(session.user.id).then(function(p){
+      myProfile = p;
+      profileCache[session.user.id] = p;
+      renderAuthUI();
+    }).catch(function(){ renderAuthUI(); });
+  }
+
+  function renderAuthUI(){
+    var loginBtn = document.getElementById('loginBtn');
+    var avatarBtn = document.getElementById('myAvatarBtn');
+    if (session && myProfile) {
+      loginBtn.style.display = 'none';
+      avatarBtn.style.display = 'flex';
+      avatarBtn.innerHTML = myProfile.avatar_url
+        ? '<img src="' + myProfile.avatar_url + '">'
+        : escapeHtml((myProfile.username || '?').charAt(0).toUpperCase());
+    } else {
+      loginBtn.style.display = 'inline-block';
+      avatarBtn.style.display = 'none';
+    }
+  }
+
+  // ---------------- data: videos ----------------
+  function fetchVideos(){
+    if (!isConfigured()) { renderEmpty(true); return; }
+    fetch(config.url + "/rest/v1/videos?select=*&order=created_at.desc", { headers: headers() })
+      .then(function(r){
+        if (!r.ok) throw new Error("โหลดฟีดไม่สำเร็จ (" + r.status + ")");
+        return r.json();
+      })
+      .then(function(data){ videos = data; renderFeed(); })
+      .catch(function(e){ renderEmpty(false, e.message); });
+  }
+
+  function insertVideoRow(row){
+    return authFetch("/rest/v1/videos", {
+      method: "POST", jsonBody: row, headers: { "Prefer": "return=representation" }
+    }).then(function(r){
+      return r.json().then(function(d){ if (!r.ok) throw new Error((d && d.message) || "บันทึกข้อมูลไม่สำเร็จ"); return d; });
+    });
+  }
+
+  function deleteVideoRow(id){
+    return authFetch("/rest/v1/videos?id=eq." + id, { method: "DELETE" });
+  }
+
+  function uploadFile(file, prefix){
+    var safeName = (prefix || "") + Date.now() + "_" + file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+    return authFetch("/storage/v1/object/videos/" + safeName, {
+      method: "POST", headers: { "Content-Type": file.type || "application/octet-stream" }, body: file
+    }).then(function(r){
+      if (!r.ok) return r.text().then(function(t){ throw new Error(t || ("อัปโหลดไฟล์ไม่สำเร็จ (" + r.status + ")")); });
+      return config.url + "/storage/v1/object/public/videos/" + safeName;
+    });
+  }
+
+  function incrementLikes(id){
+    return authFetch("/rest/v1/rpc/increment_likes", { method: "POST", jsonBody: { video_id: id } });
+  }
+
+  // ---------------- rendering: feed ----------------
+  function renderEmpty(needsSetup, errMsg){
+    feedEl.innerHTML = "";
+    var wrap = document.createElement('div');
+    wrap.className = 'empty';
+    if (needsSetup) {
+      wrap.innerHTML =
+        '<div class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg></div>' +
+        '<h3>ยังไม่ได้เชื่อมต่อ Supabase</h3>' +
+        '<p>เปิดไฟล์ index.html แล้วใส่ Supabase URL กับ anon key ในโค้ดส่วน config ก่อนใช้งาน</p>';
+      feedEl.appendChild(wrap);
+    } else if (errMsg) {
+      wrap.innerHTML =
+        '<div class="ring" style="background:linear-gradient(135deg,#ff4d4d,#ff2d78)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg></div>' +
+        '<h3>โหลดฟีดไม่สำเร็จ</h3>' +
+        '<p>' + escapeHtml(errMsg) + '</p>' +
+        '<button id="emptyRetryBtn">ลองใหม่</button>';
+      feedEl.appendChild(wrap);
+      document.getElementById('emptyRetryBtn').onclick = fetchVideos;
+    } else {
+      wrap.innerHTML =
+        '<div class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>' +
+        '<h3>ยังไม่มีคลิปเลย</h3>' +
+        '<p>เป็นคนแรกที่อัปโหลดคลิปลงวนคลิป!</p>' +
+        '<button id="emptyUploadBtn">อัปโหลดคลิปแรก</button>';
+      feedEl.appendChild(wrap);
+      document.getElementById('emptyUploadBtn').onclick = openUpload;
+    }
+  }
+
+  function escapeHtml(s){
+    var d = document.createElement('div');
+    d.textContent = s == null ? "" : String(s);
+    return d.innerHTML;
+  }
+
+  function renderFeed(){
+    if (!videos.length) { renderEmpty(false); return; }
+    if (observer) observer.disconnect();
+    feedEl.innerHTML = "";
+
+    videos.forEach(function(v, i){
+      var card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.index = i;
+      var isImage = v.media_type === 'image';
+
+      var mediaEl;
+      if (isImage) {
+        mediaEl = document.createElement('img');
+        mediaEl.src = v.video_url;
+        mediaEl.alt = v.title || '';
+      } else {
+        mediaEl = document.createElement('video');
+        mediaEl.src = v.video_url;
+        mediaEl.loop = false;
+        mediaEl.muted = true;
+        mediaEl.playsInline = true;
+        mediaEl.preload = 'metadata';
+      }
+      card.appendChild(mediaEl);
+
+      var scrim = document.createElement('div');
+      scrim.className = 'scrim';
+      card.appendChild(scrim);
+
+      var progress = document.createElement('div');
+      progress.className = 'progress';
+      var progressBar = document.createElement('i');
+      progress.appendChild(progressBar);
+      card.appendChild(progress);
+
+      function goNext(){
+        var next = (i + 1) % videos.length;
+        var nextCard = feedEl.children[next];
+        if (nextCard) nextCard.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      if (isImage) {
+        card._start = function(){
+          var start = performance.now();
+          function tick(now){
+            var pct = Math.min((now - start) / IMAGE_DURATION_MS, 1);
+            progressBar.style.width = (pct * 100) + '%';
+            if (pct < 1) { card._raf = requestAnimationFrame(tick); }
+            else { goNext(); }
+          }
+          card._raf = requestAnimationFrame(tick);
+        };
+        card._stop = function(){
+          if (card._raf) cancelAnimationFrame(card._raf);
+          progressBar.style.width = '0%';
+        };
+      } else {
+        mediaEl.addEventListener('timeupdate', function(){
+          if (mediaEl.duration) progressBar.style.width = (mediaEl.currentTime / mediaEl.duration * 100) + '%';
+        });
+        mediaEl.addEventListener('ended', goNext);
+        card._start = function(){ mediaEl.currentTime = 0; mediaEl.play().catch(function(){}); };
+        card._stop = function(){ mediaEl.pause(); };
+
+        var muteBtn = document.createElement('button');
+        muteBtn.className = 'icon-btn mute-btn';
+        muteBtn.innerHTML = mutedIcon();
+        muteBtn.onclick = function(){
+          mediaEl.muted = !mediaEl.muted;
+          muteBtn.innerHTML = mediaEl.muted ? mutedIcon() : soundIcon();
+        };
+        card.appendChild(muteBtn);
+      }
+
+      var meta = document.createElement('div');
+      meta.className = 'meta';
+      var avatarHtml = v._avatar_url
+        ? '<img src="' + v._avatar_url + '">'
+        : escapeHtml((v.author || '?').charAt(0).toUpperCase());
+      meta.innerHTML =
+        '<h2>' + escapeHtml(v.title) + '</h2>' +
+        '<div class="author-row" data-uid="' + escapeHtml(v.user_id || '') + '">' +
+        '<span class="mini-avatar">' + avatarHtml + '</span>' +
+        '<p>โดย ' + escapeHtml(v.author) + '<span class="dot">•</span>' + timeAgo(v.created_at) + '</p>' +
+        '</div>';
+      card.appendChild(meta);
+      var authorRow = meta.querySelector('.author-row');
+      if (v.user_id) authorRow.onclick = function(){ openProfile(v.user_id); };
+
+      var side = document.createElement('div');
+      side.className = 'side-actions';
+      var likeBtn = document.createElement('button');
+      likeBtn.className = 'like-btn' + (likedIds.has(v.id) ? ' liked' : '');
+      likeBtn.innerHTML = heartIcon() + '<span class="like-count">' + (v.likes || 0) + '</span>';
+      likeBtn.onclick = function(){ handleLike(v, likeBtn); };
+      side.appendChild(likeBtn);
+      card.appendChild(side);
+
+      feedEl.appendChild(card);
+    });
+
+    setupObserver();
+    hydrateAuthors();
+  }
+
+  // fetch & cache uploader avatar/username for cards missing it, patch DOM after
+  function hydrateAuthors(){
+    var uids = Array.from(new Set(videos.map(function(v){ return v.user_id; }).filter(Boolean)));
+    uids.forEach(function(uid){
+      fetchProfileById(uid).then(function(p){
+        if (!p) return;
+        videos.forEach(function(v, i){
+          if (v.user_id === uid) {
+            v._avatar_url = p.avatar_url;
+            var card = feedEl.children[i];
+            if (!card) return;
+            var mini = card.querySelector('.mini-avatar');
+            if (mini && p.avatar_url) mini.innerHTML = '<img src="' + p.avatar_url + '">';
+          }
+        });
+      });
+    });
+  }
+
+  function setupObserver(){
+    var cards = feedEl.querySelectorAll('.card');
+    observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var card = entry.target;
+        if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
+          if (card._start) card._start();
+        } else {
+          if (card._stop) card._stop();
+        }
+      });
+    }, { root: feedEl, threshold: [0, 0.6, 1] });
+    cards.forEach(function(c){ observer.observe(c); });
+  }
+
+  function handleLike(v, btn){
+    if (likedIds.has(v.id)) return;
+    likedIds.add(v.id);
+    btn.classList.add('liked', 'pop');
+    setTimeout(function(){ btn.classList.remove('pop'); }, 220);
+    var countEl = btn.querySelector('.like-count');
+    countEl.textContent = (parseInt(countEl.textContent, 10) || 0) + 1;
+    v.likes = (v.likes || 0) + 1;
+    incrementLikes(v.id).catch(function(){ /* optimistic UI already applied */ });
+  }
+
+  function timeAgo(iso){
+    var diff = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (diff < 60) return 'เมื่อสักครู่';
+    if (diff < 3600) return Math.floor(diff/60) + ' นาทีที่แล้ว';
+    if (diff < 86400) return Math.floor(diff/3600) + ' ชม.ที่แล้ว';
+    return Math.floor(diff/86400) + ' วันที่แล้ว';
+  }
+
+  function heartIcon(){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>';
+  }
+  function heartIconSmall(){
+    return '<svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>';
+  }
+  function mutedIcon(){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M23 9l-6 6M17 9l6 6"/></svg>';
+  }
+  function soundIcon(){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+  }
+  function trashIcon(){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
+  }
+
+  // ---------------- auth sheet wiring ----------------
+  var authOverlay = document.getElementById('authOverlay');
+  function openAuth(tab){
+    document.getElementById('liErr').textContent = '';
+    document.getElementById('suErr').textContent = '';
+    document.getElementById('suOk').textContent = '';
+    switchAuthTab(tab || 'login');
+    authOverlay.classList.add('show');
+  }
+  function closeAuth(){ authOverlay.classList.remove('show'); }
+  function switchAuthTab(tab){
+    var isLogin = tab === 'login';
+    document.getElementById('tabLogin').classList.toggle('active', isLogin);
+    document.getElementById('tabSignup').classList.toggle('active', !isLogin);
+    document.getElementById('loginPane').style.display = isLogin ? '' : 'none';
+    document.getElementById('signupPane').style.display = isLogin ? 'none' : '';
+  }
+  document.getElementById('loginBtn').onclick = function(){ openAuth('login'); };
+  document.getElementById('tabLogin').onclick = function(){ switchAuthTab('login'); };
+  document.getElementById('tabSignup').onclick = function(){ switchAuthTab('signup'); };
+  document.getElementById('authCancel1').onclick = closeAuth;
+  document.getElementById('authCancel2').onclick = closeAuth;
+  authOverlay.onclick = function(e){ if (e.target === authOverlay) closeAuth(); };
+
+  document.getElementById('liSubmit').onclick = function(){
+    var email = document.getElementById('liEmail').value.trim();
+    var pass = document.getElementById('liPass').value;
+    var errEl = document.getElementById('liErr');
+    errEl.textContent = '';
+    if (!email || !pass) { errEl.textContent = 'กรุณากรอกอีเมลและรหัสผ่าน'; return; }
+    var btn = document.getElementById('liSubmit');
+    btn.disabled = true; btn.textContent = 'กำลังเข้าสู่ระบบ...';
+    signIn(email, pass).then(function(d){
+      saveSession({ access_token: d.access_token, refresh_token: d.refresh_token, user: d.user });
+      return fetchProfileById(d.user.id);
+    }).then(function(p){
+      myProfile = p;
+      renderAuthUI();
+      closeAuth();
+    }).catch(function(e){
+      errEl.textContent = e.message;
+    }).finally(function(){
+      btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
+    });
+  };
+
+  document.getElementById('suSubmit').onclick = function(){
+    var username = document.getElementById('suUsername').value.trim();
+    var email = document.getElementById('suEmail').value.trim();
+    var pass = document.getElementById('suPass').value;
+    var errEl = document.getElementById('suErr');
+    var okEl = document.getElementById('suOk');
+    errEl.textContent = ''; okEl.textContent = '';
+    if (!username || !email || !pass) { errEl.textContent = 'กรุณากรอกข้อมูลให้ครบ'; return; }
+    if (pass.length < 6) { errEl.textContent = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'; return; }
+    var btn = document.getElementById('suSubmit');
+    btn.disabled = true; btn.textContent = 'กำลังสมัคร...';
+    signUp(email, pass, username).then(function(d){
+      if (d.access_token) {
+        saveSession({ access_token: d.access_token, refresh_token: d.refresh_token, user: d.user });
+        return fetchProfileById(d.user.id).then(function(p){
+          myProfile = p;
+          renderAuthUI();
+          closeAuth();
+        });
+      } else {
+        okEl.textContent = 'สมัครสำเร็จ! ตรวจสอบอีเมลเพื่อยืนยันบัญชี แล้วเข้าสู่ระบบ';
+        switchAuthTab('login');
+      }
+    }).catch(function(e){
+      errEl.textContent = e.message;
+    }).finally(function(){
+      btn.disabled = false; btn.textContent = 'สมัครสมาชิก';
+    });
+  };
+
+  // ---------------- upload sheet wiring ----------------
+  var uploadOverlay = document.getElementById('uploadOverlay');
+  var chosenFile = null;
+  function openUpload(){
+    if (!isConfigured()) {
+      alert('ยังไม่ได้ใส่ Supabase URL/anon key ในโค้ด กรุณาแก้ในไฟล์ index.html ส่วน config ก่อน');
+      return;
+    }
+    if (!session || !myProfile) { openAuth('login'); return; }
+    document.getElementById('upTitle').value = '';
+    document.getElementById('upFile').value = '';
+    document.getElementById('upErr').textContent = '';
+    document.getElementById('upAuthorNote').textContent = myProfile.username;
+    document.getElementById('dropLabel').textContent = 'แตะเพื่อเลือกไฟล์ (วิดีโอ mp4/webm หรือรูป jpg/png/gif ฯลฯ)';
+    document.getElementById('dropZone').classList.remove('has-file');
+    chosenFile = null;
+    uploadOverlay.classList.add('show');
+  }
+  function closeUpload(){ uploadOverlay.classList.remove('show'); }
+  document.getElementById('uploadBtn').onclick = openUpload;
+  document.getElementById('upCancel').onclick = closeUpload;
+  uploadOverlay.onclick = function(e){ if (e.target === uploadOverlay) closeUpload(); };
+
+  document.getElementById('upFile').addEventListener('change', function(e){
+    var f = e.target.files[0];
+    if (!f) return;
+    var errEl = document.getElementById('upErr');
+    var sizeMB = f.size / (1024 * 1024);
+    if (sizeMB > config.maxFileSizeMB) {
+      errEl.textContent = 'ไฟล์ใหญ่เกินไป (' + sizeMB.toFixed(1) + ' MB) จำกัดไว้ที่ ' + config.maxFileSizeMB + ' MB ต่อไฟล์ ลองบีบอัดหรือลดความละเอียดวิดีโอก่อนอัปโหลด';
+      chosenFile = null;
+      document.getElementById('dropLabel').textContent = 'แตะเพื่อเลือกไฟล์ (วิดีโอ mp4/webm หรือรูป jpg/png/gif ฯลฯ)';
+      document.getElementById('dropZone').classList.remove('has-file');
+      e.target.value = '';
+      return;
+    }
+    errEl.textContent = '';
+    chosenFile = f;
+    document.getElementById('dropLabel').textContent = f.name + ' (' + sizeMB.toFixed(1) + ' MB)';
+    document.getElementById('dropZone').classList.add('has-file');
+  });
+
+  document.getElementById('upSubmit').onclick = function(){
+    var title = document.getElementById('upTitle').value.trim();
+    var errEl = document.getElementById('upErr');
+    errEl.textContent = '';
+
+    if (!session || !myProfile) { errEl.textContent = 'กรุณาเข้าสู่ระบบก่อน'; return; }
+    if (!title || !chosenFile) {
+      errEl.textContent = 'กรุณากรอกชื่อคลิป/รูป และเลือกไฟล์';
+      return;
+    }
+
+    var btn = document.getElementById('upSubmit');
+    btn.disabled = true;
+    btn.textContent = 'กำลังอัปโหลด...';
+
+    var mediaType = chosenFile.type.indexOf('image') === 0 ? 'image' : 'video';
+
+    uploadFile(chosenFile, 'media/')
+      .then(function(publicUrl){
+        return insertVideoRow({
+          title: title,
+          author: myProfile.username,
+          user_id: session.user.id,
+          video_url: publicUrl,
+          media_type: mediaType
+        });
+      })
+      .then(function(){
+        btn.disabled = false;
+        btn.textContent = 'อัปโหลด';
+        closeUpload();
+        fetchVideos();
+        setTimeout(function(){ feedEl.scrollTo({ top: 0, behavior: 'smooth' }); }, 200);
+      })
+      .catch(function(e){
+        btn.disabled = false;
+        btn.textContent = 'อัปโหลด';
+        errEl.textContent = e.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่';
+      });
+  };
+
+  // ---------------- edit profile sheet wiring ----------------
+  var editOverlay = document.getElementById('editOverlay');
+  var chosenAvatarFile = null;
+  function openEdit(){
+    document.getElementById('edUsername').value = myProfile.username || '';
+    document.getElementById('edBio').value = myProfile.bio || '';
+    document.getElementById('avatarDropLabel').textContent = 'แตะเพื่อเลือกรูปโปรไฟล์ใหม่ (ไม่บังคับ)';
+    document.getElementById('avatarDropZone').classList.remove('has-file');
+    document.getElementById('avatarFile').value = '';
+    document.getElementById('edErr').textContent = '';
+    chosenAvatarFile = null;
+    editOverlay.classList.add('show');
+  }
+  function closeEdit(){ editOverlay.classList.remove('show'); }
+  document.getElementById('edCancel').onclick = closeEdit;
+  editOverlay.onclick = function(e){ if (e.target === editOverlay) closeEdit(); };
+  document.getElementById('avatarFile').addEventListener('change', function(e){
+    var f = e.target.files[0];
+    if (!f) return;
+    chosenAvatarFile = f;
+    document.getElementById('avatarDropLabel').textContent = f.name;
+    document.getElementById('avatarDropZone').classList.add('has-file');
+  });
+
+  document.getElementById('edSubmit').onclick = function(){
+    var username = document.getElementById('edUsername').value.trim();
+    var bio = document.getElementById('edBio').value.trim();
+    var errEl = document.getElementById('edErr');
+    errEl.textContent = '';
+    if (!username) { errEl.textContent = 'กรุณากรอกชื่อผู้ใช้'; return; }
+
+    var btn = document.getElementById('edSubmit');
+    btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+
+    var avatarPromise = chosenAvatarFile
+      ? uploadFile(chosenAvatarFile, 'avatars/')
+      : Promise.resolve(myProfile.avatar_url);
+
+    avatarPromise.then(function(avatarUrl){
+      return upsertMyProfile({ username: username, bio: bio, avatar_url: avatarUrl });
+    }).then(function(updated){
+      myProfile = updated;
+      profileCache[myProfile.id] = myProfile;
+      renderAuthUI();
+      closeEdit();
+      if (currentProfileView === myProfile.id) openProfile(myProfile.id, true);
+    }).catch(function(e){
+      errEl.textContent = e.message || 'บันทึกไม่สำเร็จ';
+    }).finally(function(){
+      btn.disabled = false; btn.textContent = 'บันทึก';
+    });
+  };
+
+  // ---------------- profile screen wiring ----------------
+  var profileScreen = document.getElementById('profileScreen');
+  var profileBody = document.getElementById('profileBody');
+  var currentProfileView = null;
+
+  function goHome(){
+    profileScreen.classList.remove('show');
+    currentProfileView = null;
+  }
+  document.getElementById('profileBack').onclick = goHome;
+  document.getElementById('logoHome').onclick = goHome;
+  document.getElementById('myAvatarBtn').onclick = function(){
+    if (session && myProfile) openProfile(myProfile.id);
+  };
+
+  function openProfile(uid, forceRefresh){
+    currentProfileView = uid;
+    profileScreen.classList.add('show');
+    profileBody.innerHTML = '<div class="profile-empty">กำลังโหลด...</div>';
+
+    var profilePromise = (forceRefresh || !profileCache[uid])
+      ? fetchProfileById(uid)
+      : Promise.resolve(profileCache[uid]);
+
+    var videosPromise = authFetch("/rest/v1/videos?select=*&user_id=eq." + uid + "&order=created_at.desc", { method: "GET" })
+      .then(function(r){ return r.json(); });
+
+    Promise.all([profilePromise, videosPromise]).then(function(res){
+      renderProfile(res[0], res[1]);
+    }).catch(function(){
+      profileBody.innerHTML = '<div class="profile-empty">โหลดโปรไฟล์ไม่สำเร็จ</div>';
+    });
+  }
+
+  function renderProfile(p, myVids){
+    if (!p) { profileBody.innerHTML = '<div class="profile-empty">ไม่พบโปรไฟล์</div>'; return; }
+    var isMe = session && myProfile && p.id === myProfile.id;
+    document.getElementById('profileTitle').textContent = p.username;
+
+    var totalLikes = myVids.reduce(function(s, v){ return s + (v.likes || 0); }, 0);
+
+    var header = document.createElement('div');
+    header.className = 'profile-header';
+    header.innerHTML =
+      '<div class="big-avatar">' + (p.avatar_url ? '<img src="' + p.avatar_url + '">' : escapeHtml((p.username || '?').charAt(0).toUpperCase())) + '</div>' +
+      '<h2>' + escapeHtml(p.username) + '</h2>' +
+      (p.bio ? '<p class="bio">' + escapeHtml(p.bio) + '</p>' : '') +
+      '<div class="profile-stats">' +
+        '<div><b>' + myVids.length + '</b><span>คลิป</span></div>' +
+        '<div><b>' + totalLikes + '</b><span>ไลก์รวม</span></div>' +
+      '</div>' +
+      '<div class="profile-actions">' +
+        (isMe ? '<button class="btn ghost" id="editProfileBtn">แก้ไขโปรไฟล์</button><button class="btn danger" id="logoutBtn">ออกจากระบบ</button>' : '') +
+      '</div>';
+
+    var grid = document.createElement('div');
+    grid.className = 'grid';
+    if (!myVids.length) {
+      var emptyDiv = document.createElement('div');
+      emptyDiv.className = 'profile-empty';
+      emptyDiv.textContent = isMe ? 'คุณยังไม่ได้อัปโหลดคลิป' : 'ยังไม่มีคลิปจากผู้ใช้นี้';
+      profileBody.innerHTML = '';
+      profileBody.appendChild(header);
+      profileBody.appendChild(emptyDiv);
+    } else {
+      myVids.forEach(function(v){
+        var item = document.createElement('div');
+        item.className = 'grid-item';
+        var el = v.media_type === 'image'
+          ? '<img src="' + v.video_url + '" alt="">'
+          : '<video src="' + v.video_url + '" muted playsinline preload="metadata"></video>';
+        item.innerHTML = el + '<div class="g-likes">' + heartIconSmall() + (v.likes || 0) + '</div>' +
+          (isMe ? '<button class="del-btn" title="ลบ">' + trashIcon() + '</button>' : '');
+        if (isMe) {
+          item.querySelector('.del-btn').onclick = function(e){
+            e.stopPropagation();
+            if (!confirm('ลบคลิปนี้หรือไม่?')) return;
+            deleteVideoRow(v.id).then(function(){ openProfile(p.id, true); fetchVideos(); });
+          };
+        }
+        grid.appendChild(item);
+      });
+      profileBody.innerHTML = '';
+      profileBody.appendChild(header);
+      profileBody.appendChild(grid);
+    }
+
+    if (isMe) {
+      document.getElementById('editProfileBtn').onclick = openEdit;
+      document.getElementById('logoutBtn').onclick = function(){ signOut(); };
+    }
+  }
+
+  // ---------------- boot ----------------
+  initSession().then(function(){
+    if (isConfigured()) fetchVideos(); else renderEmpty(true);
+  });
+})();
+</script>
+</body>
+</html>
