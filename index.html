@@ -21,6 +21,43 @@
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans Thai","Noto Sans",system-ui,sans-serif;
     overflow:hidden;}
 
+  /* ---------- responsive app frame ---------- */
+  /* บนมือถือ #appFrame เต็มจอตามปกติ
+     บนแท็บเล็ต/คอม (จอกว้างกว่า 700px) จะถูกจำกัดความกว้างและจัดกึ่งกลาง คล้ายเปิดแอปมือถือ
+     บนคอม โดยรอบจะมีพื้นหลังไล่สีให้ดูไม่โล่ง
+     ตัว transform ด้านล่างเป็นกลไกสำคัญ: มันทำให้ #appFrame กลายเป็น "containing block"
+     ของลูกที่เป็น position:fixed ทั้งหมด (topbar, overlay, profileScreen) ตามสเปก CSS
+     ผลคือ fixed ทุกจุดจะยึดกับกรอบนี้แทนที่จะยึดกับทั้งหน้าจอ โดยไม่ต้องแก้ position ที่มีอยู่เลย */
+  #appFrame{
+    position:relative;
+    height:100%;height:100dvh;
+    max-width:480px;
+    margin:0 auto;
+    background:#000;
+    overflow:hidden;
+    transform:translateZ(0);
+  }
+  @media (min-width:701px){
+    html,body{
+      overflow:auto;
+      background:
+        radial-gradient(circle at 18% 15%, rgba(124,58,237,.28), transparent 55%),
+        radial-gradient(circle at 85% 85%, rgba(255,45,120,.22), transparent 55%),
+        #08070c;
+    }
+    #appFrame{
+      margin:28px auto;
+      height:calc(100dvh - 56px);
+      min-height:560px;
+      border-radius:26px;
+      box-shadow:0 30px 90px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.07);
+    }
+  }
+  /* จอแท็บเล็ต/คอมจอใหญ่ขึ้นอีกหน่อย ให้กรอบกว้างขึ้นนิดหน่อยจะได้ไม่แคบเกิน */
+  @media (min-width:1024px){
+    #appFrame{ max-width:520px; }
+  }
+
   /* ---------- top bar ---------- */
   .topbar{
     position:fixed;top:0;left:0;right:0;z-index:30;
@@ -61,12 +98,12 @@
 
   /* ---------- feed ---------- */
   #feed{
-    height:100%;height:100dvh;overflow-y:scroll;scroll-snap-type:y mandatory;
+    height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;
     scrollbar-width:none;
   }
   #feed::-webkit-scrollbar{display:none;}
   .card{
-    position:relative;height:100%;height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;
+    position:relative;height:100%;scroll-snap-align:start;scroll-snap-stop:always;
     display:flex;align-items:flex-end;justify-content:center;background:#000;overflow:hidden;
   }
   .card video, .card img{
@@ -104,6 +141,13 @@
   .like-btn.pop svg{transform:scale(1.35);}
   .like-count{font-size:12px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);}
 
+  .comment-btn{
+    background:none;border:none;padding:0;cursor:pointer;color:#fff;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+  }
+  .comment-btn svg{width:30px;height:30px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));}
+  .comment-count{font-size:12px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);}
+
   .mute-btn{
     position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 64px);z-index:3;
   }
@@ -115,7 +159,7 @@
 
   /* ---------- empty state ---------- */
   .empty{
-    height:100%;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:14px;text-align:center;padding:0 30px;
   }
   .empty .ring{
@@ -174,6 +218,39 @@
   .switch-link{margin-top:14px;text-align:center;font-size:13px;color:var(--muted);}
   .switch-link a{color:#fff;font-weight:700;text-decoration:none;cursor:pointer;}
 
+  /* ---------- comments sheet ---------- */
+  .comment-sheet{max-height:80vh;display:flex;flex-direction:column;}
+  .comment-list{flex:1;overflow-y:auto;min-height:120px;max-height:50vh;margin:4px -4px 10px;padding:0 4px;}
+  .comment-empty{padding:26px 10px;text-align:center;color:var(--muted);font-size:13px;}
+  .comment-item{display:flex;gap:10px;padding:10px 2px;}
+  .comment-item .c-avatar{
+    width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--grad);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;
+  }
+  .comment-item .c-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+  .comment-item .c-body{flex:1;min-width:0;}
+  .comment-item .c-name{font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:2px;}
+  .comment-item .c-text{font-size:14px;line-height:1.4;word-break:break-word;}
+  .comment-item .c-time{font-size:11px;color:var(--muted);margin-top:3px;}
+  .comment-item .c-del{
+    background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;flex-shrink:0;align-self:flex-start;
+  }
+  .comment-item .c-del svg{width:14px;height:14px;}
+  .comment-input-row{display:flex;gap:8px;align-items:center;padding-top:4px;border-top:1px solid rgba(255,255,255,.08);}
+  .comment-input-row input{
+    flex:1;padding:11px 13px;border-radius:22px;border:1px solid rgba(255,255,255,.12);
+    background:var(--surface-2);color:var(--text);font-size:14px;outline:none;font-family:inherit;
+  }
+  .comment-input-row input:focus{border-color:var(--accent-b);}
+  .comment-send{
+    width:38px;height:38px;border-radius:50%;border:none;background:var(--grad);color:#fff;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+  }
+  .comment-send svg{width:17px;height:17px;}
+  .comment-send:disabled{opacity:.5;cursor:not-allowed;}
+  .comment-login-note{text-align:center;font-size:12.5px;color:var(--muted);padding-top:6px;}
+  .comment-login-note a{color:#fff;font-weight:700;text-decoration:none;cursor:pointer;}
+
   /* ---------- profile screen ---------- */
   #profileScreen{
     position:fixed;inset:0;z-index:40;background:var(--bg);
@@ -222,6 +299,11 @@
 </style>
 </head>
 <body>
+
+<!-- ทุกอย่างอยู่ใน #appFrame เพื่อให้จอกว้าง (แท็บเล็ต/คอม) เห็นแอปเป็นกรอบแคบตรงกลางแบบแอปมือถือ
+     appFrame มี transform ทำให้กลายเป็น containing block ของ position:fixed ลูกๆ ทั้งหมด
+     (topbar, overlay ต่างๆ, profileScreen) จึงถูกจำกัดขอบเขตอยู่ในกรอบนี้แทนที่จะเต็มจอ -->
+<div id="appFrame">
 
 <div class="topbar">
   <div class="logo" id="logoHome">วน<span class="loop">คลิป</span><small>อัปแล้วขึ้นวน</small></div>
@@ -321,6 +403,24 @@
   </div>
 </div>
 
+<!-- ---------- comments sheet ---------- -->
+<div class="overlay" id="commentOverlay">
+  <div class="sheet comment-sheet">
+    <h3>คอมเมนต์</h3>
+    <div class="comment-list" id="commentList"></div>
+    <div class="comment-input-row" id="commentInputRow">
+      <input type="text" id="commentInput" placeholder="แสดงความคิดเห็น...">
+      <button class="comment-send" id="commentSend" title="ส่ง">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
+    <div class="comment-login-note" id="commentLoginNote" style="display:none;">
+      <a id="commentLoginLink">เข้าสู่ระบบ</a> เพื่อแสดงความคิดเห็น
+    </div>
+    <button class="btn ghost" id="commentClose" style="margin-top:12px;">ปิด</button>
+  </div>
+</div>
+
 <!-- ---------- profile screen ---------- -->
 <div id="profileScreen">
   <div class="profile-topbar">
@@ -331,6 +431,8 @@
   </div>
   <div id="profileBody"></div>
 </div>
+
+</div><!-- /#appFrame -->
 
 <script>
 (function(){
@@ -403,20 +505,49 @@
     });
   }
 
+  // ---- แปล error จาก Supabase Auth ให้เป็นข้อความที่เข้าใจง่าย ----
+  // ปัญหา "คนเข้าเยอะแล้วขึ้น limit": Supabase (โดยเฉพาะแพลน Free) จำกัดจำนวนคำขอ auth
+  // ต่อนาที/ต่อชั่วโมงไว้ เช่น ส่งอีเมลยืนยันได้ไม่กี่ฉบับ/ชม. หรือคำขอสมัคร/ล็อกอินถี่เกินไป
+  // จะโดน 429 (Too Many Requests) เราจับ error นี้แล้วแสดงข้อความสุภาพแทน error ดิบจาก Supabase
+  // ทางแก้ถาวรฝั่ง Supabase: ปิด "Confirm email" ใน Authentication → Providers → Email
+  // (ค่าเริ่มต้นแพลน Free ส่งอีเมลยืนยันได้จำกัดมาก เป็นสาเหตุที่พบบ่อยที่สุดของปัญหานี้)
+  function authErrorMessage(r, d){
+    if (r.status === 429) {
+      var retry = r.headers.get('Retry-After');
+      return 'ตอนนี้มีคนใช้งานพร้อมกันเยอะ ระบบจำกัดจำนวนคำขอชั่วคราว กรุณาลองใหม่' +
+        (retry ? ' ในอีก ' + retry + ' วินาที' : 'อีกครั้งในอีกสักครู่');
+    }
+    var code = (d && (d.error_code || d.code)) || '';
+    var msg = (d && (d.msg || d.error_description || d.message)) || '';
+    if (code === 'over_email_send_rate_limit' || /email rate limit/i.test(msg)) {
+      return 'ส่งอีเมลถี่เกินไป กรุณารอสักครู่แล้วลองสมัครใหม่ (หรือแจ้งผู้ดูแลให้ปิดการยืนยันอีเมล)';
+    }
+    if (code === 'user_already_exists' || /already registered/i.test(msg)) {
+      return 'อีเมลนี้มีบัญชีอยู่แล้ว ลองเข้าสู่ระบบแทน';
+    }
+    if (code === 'invalid_credentials' || /invalid login credentials/i.test(msg)) {
+      return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+    }
+    if (code === 'over_request_rate_limit' || /rate limit/i.test(msg)) {
+      return 'มีคำขอเข้ามาถี่เกินไป กรุณารอสักครู่แล้วลองใหม่';
+    }
+    return msg || 'เกิดข้อผิดพลาด กรุณาลองใหม่';
+  }
+
   // ---- auth actions ----
   function signUp(email, pass, username){
     return fetch(config.url + "/auth/v1/signup", {
       method: "POST",
       headers: { apikey: config.key, "Content-Type": "application/json" },
       body: JSON.stringify({ email: email, password: pass, data: { username: username } })
-    }).then(function(r){ return r.json().then(function(d){ if (!r.ok) throw new Error(d.msg || d.error_description || "สมัครสมาชิกไม่สำเร็จ"); return d; }); });
+    }).then(function(r){ return r.json().then(function(d){ if (!r.ok) throw new Error(authErrorMessage(r, d)); return d; }); });
   }
   function signIn(email, pass){
     return fetch(config.url + "/auth/v1/token?grant_type=password", {
       method: "POST",
       headers: { apikey: config.key, "Content-Type": "application/json" },
       body: JSON.stringify({ email: email, password: pass })
-    }).then(function(r){ return r.json().then(function(d){ if (!r.ok) throw new Error(d.msg || d.error_description || "อีเมลหรือรหัสผ่านไม่ถูกต้อง"); return d; }); });
+    }).then(function(r){ return r.json().then(function(d){ if (!r.ok) throw new Error(authErrorMessage(r, d)); return d; }); });
   }
 
   // ---- ensure a "profiles" row exists for the logged-in user ----
@@ -541,6 +672,38 @@
 
   function incrementLikes(id){
     return authFetch("/rest/v1/rpc/increment_likes", { method: "POST", jsonBody: { video_id: id } });
+  }
+
+  // ---------------- data: comments ----------------
+  // ต้องมีตาราง "comments" ใน Supabase ก่อน (id uuid, video_id uuid, user_id uuid, author text,
+  // content text, created_at timestamptz) พร้อม RLS ให้ทุกคนอ่านได้ และเจ้าของ insert/delete ได้เอง
+  // (ดูสคริปต์ SQL ที่แนบมาให้รันใน Supabase → SQL Editor)
+  function fetchComments(videoId){
+    return authFetch("/rest/v1/comments?select=*&video_id=eq." + videoId + "&order=created_at.asc", { method: "GET" })
+      .then(function(r){ return r.json(); });
+  }
+  function insertComment(videoId, content){
+    return authFetch("/rest/v1/comments", {
+      method: "POST",
+      jsonBody: { video_id: videoId, user_id: session.user.id, author: myProfile.username, content: content },
+      headers: { "Prefer": "return=representation" }
+    }).then(function(r){
+      return r.json().then(function(d){ if (!r.ok) throw new Error((d && d.message) || "ส่งคอมเมนต์ไม่สำเร็จ"); return d[0]; });
+    });
+  }
+  function deleteComment(id){
+    return authFetch("/rest/v1/comments?id=eq." + id, { method: "DELETE" });
+  }
+  // นับจำนวนคอมเมนต์ของคลิปหนึ่งๆ โดยไม่ต้องโหลดเนื้อหาคอมเมนต์ทั้งหมด
+  // ใช้ header Prefer: count=exact แล้วอ่านค่าจาก Content-Range ที่ Supabase ตอบกลับมา (รูปแบบ "0-9/42")
+  function countComments(videoId){
+    return authFetch("/rest/v1/comments?select=id&video_id=eq." + videoId, {
+      method: "GET", headers: { "Prefer": "count=exact", "Range": "0-0" }
+    }).then(function(r){
+      var range = r.headers.get('content-range') || '';
+      var total = parseInt(range.split('/')[1], 10);
+      return isNaN(total) ? 0 : total;
+    }).catch(function(){ return 0; });
   }
 
   // ---------------- rendering: feed ----------------
@@ -676,6 +839,13 @@
       likeBtn.innerHTML = heartIcon() + '<span class="like-count">' + (v.likes || 0) + '</span>';
       likeBtn.onclick = function(){ handleLike(v, likeBtn); };
       side.appendChild(likeBtn);
+
+      var commentBtn = document.createElement('button');
+      commentBtn.className = 'comment-btn';
+      commentBtn.innerHTML = commentIcon() + '<span class="comment-count">' + (v._commentCount != null ? v._commentCount : '') + '</span>';
+      commentBtn.onclick = function(){ openComments(v, commentBtn); };
+      side.appendChild(commentBtn);
+
       card.appendChild(side);
 
       feedEl.appendChild(card);
@@ -683,6 +853,7 @@
 
     setupObserver();
     hydrateAuthors();
+    hydrateCommentCounts();
   }
 
   // fetch & cache uploader avatar/username for cards missing it, patch DOM after
@@ -700,6 +871,19 @@
             if (mini && p.avatar_url) mini.innerHTML = '<img src="' + p.avatar_url + '">';
           }
         });
+      });
+    });
+  }
+
+  // fetch จำนวนคอมเมนต์ของแต่ละคลิปที่แสดงอยู่ แล้วเติมตัวเลขลงปุ่มคอมเมนต์
+  function hydrateCommentCounts(){
+    videos.forEach(function(v, i){
+      countComments(v.id).then(function(total){
+        v._commentCount = total;
+        var card = feedEl.children[i];
+        if (!card) return;
+        var countEl = card.querySelector('.comment-count');
+        if (countEl) countEl.textContent = total;
       });
     });
   }
@@ -752,6 +936,9 @@
   }
   function trashIcon(){
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
+  }
+  function commentIcon(){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
   }
 
   // ---------------- auth sheet wiring ----------------
@@ -810,7 +997,8 @@
     }).catch(function(e){
       errEl.textContent = e.message;
     }).finally(function(){
-      btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
+      // หน่วงเปิดปุ่มอีกนิด กันคนกดรัวๆ ตอนคนใช้งานเยอะจนยิ่งโดน rate limit ซ้ำ
+      setTimeout(function(){ btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ'; }, 600);
     });
   };
 
@@ -844,7 +1032,7 @@
     }).catch(function(e){
       errEl.textContent = e.message;
     }).finally(function(){
-      btn.disabled = false; btn.textContent = 'สมัครสมาชิก';
+      setTimeout(function(){ btn.disabled = false; btn.textContent = 'สมัครสมาชิก'; }, 600);
     });
   };
 
@@ -930,6 +1118,131 @@
         errEl.textContent = e.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่';
       });
   };
+
+  // ---------------- comment sheet wiring ----------------
+  var commentOverlay = document.getElementById('commentOverlay');
+  var commentListEl = document.getElementById('commentList');
+  var commentInput = document.getElementById('commentInput');
+  var commentSendBtn = document.getElementById('commentSend');
+  var commentInputRow = document.getElementById('commentInputRow');
+  var commentLoginNote = document.getElementById('commentLoginNote');
+  var currentCommentVideo = null; // คลิปที่กำลังเปิดคอมเมนต์อยู่
+  var currentCommentBtnEl = null; // ปุ่มคอมเมนต์บนการ์ดที่เปิดอยู่ ไว้อัปเดตตัวเลขหลังโพสต์/ลบ
+
+  function openComments(video, btnEl){
+    currentCommentVideo = video;
+    currentCommentBtnEl = btnEl || null;
+    commentInput.value = '';
+    // ต้องล็อกอินก่อนถึงจะพิมพ์คอมเมนต์ได้ ไม่งั้นซ่อนช่องพิมพ์แล้วโชว์ลิงก์ให้ไปล็อกอิน
+    if (session && myProfile) {
+      commentInputRow.style.display = 'flex';
+      commentLoginNote.style.display = 'none';
+    } else {
+      commentInputRow.style.display = 'none';
+      commentLoginNote.style.display = 'block';
+    }
+    commentListEl.innerHTML = '<div class="comment-empty">กำลังโหลด...</div>';
+    commentOverlay.classList.add('show');
+    fetchComments(video.id).then(renderCommentList).catch(function(){
+      commentListEl.innerHTML = '<div class="comment-empty">โหลดคอมเมนต์ไม่สำเร็จ</div>';
+    });
+  }
+  function closeComments(){ commentOverlay.classList.remove('show'); currentCommentVideo = null; }
+
+  function renderCommentList(list){
+    commentListEl.innerHTML = '';
+    if (!list.length) {
+      commentListEl.innerHTML = '<div class="comment-empty">ยังไม่มีคอมเมนต์ เป็นคนแรกที่คอมเมนต์เลย!</div>';
+      return;
+    }
+    list.forEach(function(c){
+      var isMine = session && myProfile && c.user_id === myProfile.id;
+      var item = document.createElement('div');
+      item.className = 'comment-item';
+      var p = c.user_id ? profileCache[c.user_id] : null;
+      var avatarHtml = (p && p.avatar_url)
+        ? '<img src="' + p.avatar_url + '">'
+        : escapeHtml((c.author || '?').charAt(0).toUpperCase());
+      item.innerHTML =
+        '<div class="c-avatar">' + avatarHtml + '</div>' +
+        '<div class="c-body">' +
+          '<div class="c-name">' + escapeHtml(c.author) + '</div>' +
+          '<div class="c-text">' + escapeHtml(c.content) + '</div>' +
+          '<div class="c-time">' + timeAgo(c.created_at) + '</div>' +
+        '</div>' +
+        (isMine ? '<button class="c-del" title="ลบคอมเมนต์">' + trashIcon() + '</button>' : '');
+      if (isMine) {
+        item.querySelector('.c-del').onclick = function(){
+          if (!confirm('ลบคอมเมนต์นี้หรือไม่?')) return;
+          deleteComment(c.id).then(function(){
+            item.remove();
+            if (currentCommentVideo) {
+              currentCommentVideo._commentCount = Math.max(0, (currentCommentVideo._commentCount || 1) - 1);
+              if (currentCommentBtnEl) currentCommentBtnEl.querySelector('.comment-count').textContent = currentCommentVideo._commentCount;
+            }
+          });
+        };
+      }
+      commentListEl.appendChild(item);
+    });
+    commentListEl.scrollTop = commentListEl.scrollHeight;
+  }
+
+  function submitComment(){
+    var text = commentInput.value.trim();
+    if (!text || !currentCommentVideo) return;
+    if (!session || !myProfile) { closeComments(); openLogin(); return; }
+    commentSendBtn.disabled = true;
+    insertComment(currentCommentVideo.id, text).then(function(c){
+      commentInput.value = '';
+      var empty = commentListEl.querySelector('.comment-empty');
+      if (empty) empty.remove();
+      // ต่อโปรไฟล์ตัวเองเข้า cache ไว้เผื่อ render avatar ได้ทันทีโดยไม่ต้อง fetch ใหม่
+      profileCache[myProfile.id] = myProfile;
+      // เติมคอมเมนต์ใหม่ต่อท้ายรายการที่แสดงอยู่โดยไม่ต้อง fetch ใหม่ทั้งหมด
+      appendCommentToList(c);
+      currentCommentVideo._commentCount = (currentCommentVideo._commentCount || 0) + 1;
+      if (currentCommentBtnEl) currentCommentBtnEl.querySelector('.comment-count').textContent = currentCommentVideo._commentCount;
+    }).catch(function(e){
+      alert(e.message || 'ส่งคอมเมนต์ไม่สำเร็จ');
+    }).finally(function(){
+      commentSendBtn.disabled = false;
+    });
+  }
+  // เติมคอมเมนต์เดียวลงท้ายลิสต์ที่เปิดอยู่ (ใช้หลังโพสต์สำเร็จ แทนการโหลดทั้งลิสต์ใหม่)
+  function appendCommentToList(c){
+    var item = document.createElement('div');
+    item.className = 'comment-item';
+    var avatarHtml = (myProfile && myProfile.avatar_url)
+      ? '<img src="' + myProfile.avatar_url + '">'
+      : escapeHtml((c.author || '?').charAt(0).toUpperCase());
+    item.innerHTML =
+      '<div class="c-avatar">' + avatarHtml + '</div>' +
+      '<div class="c-body">' +
+        '<div class="c-name">' + escapeHtml(c.author) + '</div>' +
+        '<div class="c-text">' + escapeHtml(c.content) + '</div>' +
+        '<div class="c-time">เมื่อสักครู่</div>' +
+      '</div>' +
+      '<button class="c-del" title="ลบคอมเมนต์">' + trashIcon() + '</button>';
+    item.querySelector('.c-del').onclick = function(){
+      if (!confirm('ลบคอมเมนต์นี้หรือไม่?')) return;
+      deleteComment(c.id).then(function(){
+        item.remove();
+        if (currentCommentVideo) {
+          currentCommentVideo._commentCount = Math.max(0, (currentCommentVideo._commentCount || 1) - 1);
+          if (currentCommentBtnEl) currentCommentBtnEl.querySelector('.comment-count').textContent = currentCommentVideo._commentCount;
+        }
+      });
+    };
+    commentListEl.appendChild(item);
+    commentListEl.scrollTop = commentListEl.scrollHeight;
+  }
+
+  document.getElementById('commentClose').onclick = closeComments;
+  commentOverlay.onclick = function(e){ if (e.target === commentOverlay) closeComments(); };
+  commentSendBtn.onclick = submitComment;
+  commentInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') submitComment(); });
+  document.getElementById('commentLoginLink').onclick = function(){ closeComments(); openLogin(); };
 
   // ---------------- edit profile sheet wiring ----------------
   var editOverlay = document.getElementById('editOverlay');
